@@ -1,0 +1,127 @@
+Name : Utkarsh Baburao Malav
+Emp ID : 2000147718
+Date : 02/04/2025
+MYSQL ASSESSMENT CODING CHALLENGE
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+CREATE DATABASE CrimeManagement;
+
+USE CrimeManagement;
+
+CREATE TABLE Crime (
+ CrimeID INT PRIMARY KEY,
+ IncidentType VARCHAR(255),
+ IncidentDate DATE,
+ Location VARCHAR(255),
+ Description TEXT,
+ Status VARCHAR(20)
+);
+
+CREATE TABLE Victim (
+ VictimID INT PRIMARY KEY,
+ CrimeID INT,
+ Name VARCHAR(255),
+ ContactInfo VARCHAR(255),
+ Injuries VARCHAR(255),
+ FOREIGN KEY (CrimeID) REFERENCES Crime(CrimeID)
+);
+
+CREATE TABLE Suspect (
+ SuspectID INT PRIMARY KEY,
+ CrimeID INT,
+ Name VARCHAR(255),
+ Description TEXT,
+ CriminalHistory TEXT,
+ FOREIGN KEY (CrimeID) REFERENCES Crime(CrimeID)
+);
+
+INSERT INTO Crime (CrimeID, IncidentType, IncidentDate, Location, Description, Status)
+VALUES
+ (1, 'Robbery', '2023-09-15', '123 Main St, Cityville', 'Armed robbery at a convenience store', 'Open'),
+ (2, 'Homicide', '2023-09-20', '456 Elm St, Townsville', 'Investigation into a murder case', 'Under Investigation'),
+ (3, 'Theft', '2023-09-10', '789 Oak St, Villagetown', 'Shoplifting incident at a mall', 'Closed');
+
+INSERT INTO Victim (VictimID, CrimeID, Name, ContactInfo, Injuries)
+VALUES
+ (1, 1, 'John Doe', 'johndoe@example.com', 'Minor injuries'),
+ (2, 2, 'Jane Smith', 'janesmith@example.com', 'Deceased'),
+ (3, 3, 'Alice Johnson', 'alicejohnson@example.com', 'None');
+ 
+ INSERT INTO Suspect (SuspectID, CrimeID, Name, Description, CriminalHistory)
+VALUES
+ (1, 1, 'Robber 1', 'Armed and masked robber', 'Previous robbery convictions'),
+ (2, 2, 'Unknown', 'Investigation ongoing', NULL),
+ (3, 3, 'Suspect 1', 'Shoplifting suspect', 'Prior shoplifting arrests');
+ 
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+ 
+ 
+/*	1. Select all open incidents.	*/
+SELECT * FROM Crime where Status='Open';
+
+/*	2. Find the total number of incidents.*/
+SELECT COUNT(*) AS TOTAL_INCIDENTS from Crime;
+ 
+/*	3. List all unique incident types.	*/
+SELECT DISTINCT IncidentType from Crime;
+
+/*	4. Retrieve incidents that occurred between '2023-09-01' and '2023-09-10'.	*/
+SELECT * from Crime where IncidentDate BETWEEN '2023-09-01' AND '2023-09-10';
+
+/*	5. List persons involved in incidents in descending order of age.	*/
+/*Answer Skip due to No DATA  OF AGE IN SCHEMA*/
+SELECT Name, IncidentDate FROM Victim v join Crime c on v.CrimeID= c.CrimeID 
+UNION 
+SELECT NAME, IncidentDate From Suspect s Join Crime c on s.CrimeID=c.CrimeID 
+Order by IncidentDate DESC;
+
+/*	6. Find the average age of persons involved in incidents.	*/
+/*Answer Skip due to No DATA  OF AGE IN SCEMA*/
+
+/*	7. List incident types and their counts, only for open cases.	*/
+SELECT IncidentType, COUNT(*) AS INCIDENT_COUNT From Crime WHERE Status='Open' Group by IncidentType;
+
+/*	8. Find persons with names containing 'Doe'.	*/
+SELECT NAME From Victim Where Name LIKE '%Doe%';
+
+/*	9. Retrieve the names of persons involved in open cases and closed cases.	*/
+SELECT v.Name, c.Status From Victim v Join Crime c ON v.CrimeID = c.CrimeID WHERE c.Status ='Open' or c.Status='Closed'
+UNION
+SELECT s.Name, c.Status From Suspect s Join Crime c ON s.CrimeID = c.CrimeID WHERE c.Status ='Open' or c.Status='Closed';
+
+/*10. List incident types where there are persons aged 30 or 35 involved.*/
+/*Answer Skip due to No DATA  OF AGE IN SCHEMA*/
+
+/*	11. Find persons involved in incidents of the same type as 'Robbery'.	*/
+SELECT v.NAME,c.IncidentType from Victim v Join Crime c on v.CrimeId=c.CrimeId Where c.IncidentType='Robbery';
+
+/*	12. List incident types with more than one open case.	*/
+SELECT IncidentType, Count(*) as Case_Count From Crime Where Status='Open' Group by IncidentType Having Count(*) > 1;
+
+/*	13. List all incidents with suspects whose names also appear as victims in other incidents.	*/
+SELECT c.* From Crime c Join Suspect s on c.CrimeID = s.CrimeID
+JOIN Victim v ON s.Name = v.Name AND s.CrimeID <> v.CrimeID;
+
+/*	14. Retrieve all incidents along with victim and suspect details.	*/
+SELECT c.*, v.Name, s.Name From Crime c 
+Join Victim v on c.CrimeID = v.CrimeID 
+Join Suspect s on c.CrimeID=s.CrimeID;
+
+/*	15. Find incidents where the suspect is older than any victim.	*/
+/*Answer Skip due to No DATA  OF AGE IN SCHEMA*/
+
+/*	16. Find suspects involved in multiple incidents	*/
+SELECT Name, Count(Distinct CrimeID) as Incident_Count From Suspect Group By Name Having COUNT(DISTINCT CrimeID)>1;
+
+/*	17. List incidents with no suspects involved.*/
+SELECT * FROM Crime WHERE CrimeID Not IN (SELECT CrimeID FROM suspect);
+
+/*	18. List all cases where at least one incident is of type 'Homicide' and all other incidents are of type 'Robbery'.	*/
+SELECT * FROM Crime where IncidentType='Homicide' AND Not exists (SELECT * FROM Crime WHERE IncidentType Not IN ('Homicide','Robbery'));
+
+/*	19. Retrieve a list of all incidents and the associated suspects, showing suspects for each incident, or 'No Suspect' if there are none.	*/
+SELECT c.CrimeID, c.IncidentType, coalesce(s.Name, 'No Suspect') AS SUSPECT from Crime c JOIN Suspect s on c.CrimeID=s.CrimeID;
+
+/*	20. List all suspects who have been involved in incidents with incident types 'Robbery' or 'Assault'	*/
+SELECT s.Name FROM Suspect s JOIN Crime c ON s.CrimeID = c.CrimeID WHERE c.IncidentType IN ('Robbery','Assault');
